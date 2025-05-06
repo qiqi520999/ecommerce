@@ -1,6 +1,11 @@
-import Redis from "ioredis";
-import dotenv from "dotenv";
+import { Redis } from '@upstash/redis';
 
-dotenv.config();
+export const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_URL || 'https://patient-midge-34601.upstash.io',
+  token: process.env.UPSTASH_REDIS_REST_TOKEN || 'AYcpAAIjcDFiNDFkNGE3MThjMjc0OGFiOGY1ZWJkZjJkNWE5MDgxY3AxMA',
+});
 
-export const redis = new Redis(process.env.UPSTASH_REDIS_URL);
+// Example usage
+await redis.set('foo', 'bar');
+const data = await redis.get('foo');
+console.log('Redis data:', data);

@@ -14,30 +14,52 @@ export const getAllProducts = async (req, res) => {
 
 export const getFeaturedProducts = async (req, res) => {
 	try {
-		let featuredProducts = await redis.get("featured_products");
-		if (featuredProducts) {
-			return res.json(JSON.parse(featuredProducts));
+	  let featuredProducts = await redis.get("featured_products");
+  
+	  if (featuredProducts) {
+		// Log the raw data type fetched from Redis
+		console.log("📌 Raw data from Redis:", typeof featuredProducts);
+  
+		// Ensure the data fetched from Redis is a JSON string before parsing
+		if (typeof featuredProducts === "string") {
+		  try {
+			featuredProducts = JSON.parse(featuredProducts);
+		  } catch (parseError) {
+			console.error("❌ Error parsing featured products from Redis:", parseError.message);
+			return res.status(500).json({ message: "Error parsing data from cache", error: parseError.message });
+		  }
 		}
-
-		// if not in redis, fetch from mongodb
-		// .lean() is gonna return a plain javascript object instead of a mongodb document
-		// which is good for performance
-		featuredProducts = await Product.find({ isFeatured: true }).lean();
-
-		if (!featuredProducts) {
-			return res.status(404).json({ message: "No featured products found" });
-		}
-
-		// store in redis for future quick access
-
-		await redis.set("featured_products", JSON.stringify(featuredProducts));
-
-		res.json(featuredProducts);
+  
+		console.log("📌 Parsed data from Redis:", featuredProducts);
+  
+		// Ensure the response JSON is valid
+		return res.json({ success: true, data: featuredProducts });
+	  }
+  
+	  // Fetch from MongoDB
+	  featuredProducts = await Product.find({ isFeatured: true }).lean();
+  
+	  // Check if MongoDB data is invalid
+	  if (!featuredProducts || featuredProducts.length === 0) {
+		return res.status(404).json({ message: "No featured products found" });
+	  }
+  
+	  console.log("📌 Featured Products from MongoDB:", JSON.stringify(featuredProducts, null, 2));
+  
+	  // Save to Redis
+	  await redis.set("featured_products", JSON.stringify(featuredProducts));
+  
+	  res.json({ success: true, data: featuredProducts });
 	} catch (error) {
-		console.log("Error in getFeaturedProducts controller", error.message);
-		res.status(500).json({ message: "Server error", error: error.message });
+	  console.error("❌ Error in getFeaturedProducts controller:", error.message);
+	  res.status(500).json({ message: "Server error", error: error.message });
 	}
-};
+  };
+//   In this updated version, I've added:
+
+//   A try-catch block when parsing the data fetched from Redis to handle any parsing errors gracefully.
+  
+//   Additional error logging to help identify any issues with the data being parsed or returned.
 
 export const createProduct = async (req, res) => {
 	try {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import image1 from '../assest/download.jpg'
-import image2 from '../assest/download (1).jpg'
-import image3 from '../assest/download (2).jpg'
+import image1 from '/assest/download.jpg';
+import image2 from '/assest/download (1).jpg';
+import image3 from '/assest/download (2).jpg';
 import { FaAngleRight } from "react-icons/fa6";
 import { FaAngleLeft } from "react-icons/fa6";
 
@@ -53,7 +53,8 @@ const BannerProduct = () => {
                 </div>
 
                 {/**desktop and tablet version */}
-              <div className='hidden md:flex h-full w-full overflow-hidden'>
+                <div className='hidden md:flex h-full w-full overflow-hidden'>
+
                 {
                         desktopImages.map((imageURl,index)=>{
                             return(
@@ -63,7 +64,8 @@ const BannerProduct = () => {
                             )
                         })
                 }
-              </div>
+              		</div>
+
         </div>
     </div>
   )

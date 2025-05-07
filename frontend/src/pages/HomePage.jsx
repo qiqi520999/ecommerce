@@ -10,7 +10,7 @@ const categories = [
     { href: "/jeans", name: "Jeans", imageUrl: "/jeans.jpg" },
     { href: "/t-shirts", name: "T-shirts", imageUrl: "/tshirts.jpg" },
     { href: "/shoes", name: "Shoes", imageUrl: "/shoes.jpg" },
-    { href: "/glasses", name: "Glasses", imageUrl: "/glasses.png" },
+    { href: "/items", name: "Items", imageUrl: "/glasses.png" },
     { href: "/jackets", name: "Jackets", imageUrl: "/jackets.jpg" },
     { href: "/suits", name: "Suits", imageUrl: "/suits.jpg" },
     { href: "/bags", name: "Bags", imageUrl: "/bags.jpg" },
@@ -142,7 +142,7 @@ const HomePage = () => {
 
                 {/* Sort Buttons Section */}
                 <div className="my-8">
-                    <h2 className="text-2xl font-semibold mb-4 text-center text-emerald-300">Sắp xếp sản phẩm</h2>
+                    <h2 className="text-2xl font-semibold mb-4 text-center text-emerald-300">FILTER</h2>
                     <div className="flex flex-wrap justify-center gap-2 mb-8">
                         {sortOptions.map(option => (
                             <button

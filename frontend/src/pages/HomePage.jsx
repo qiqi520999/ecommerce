@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import CategoryItem from "../components/CategoryItem";
 import { useProductStore } from "../stores/useProductStore";
@@ -16,27 +16,44 @@ const categories = [
     { href: "/bags", name: "Bags", imageUrl: "/bags.jpg" },
 ];
 
-const banners = [
-    { name: "Summer Sale", imageUrl: "/download.jpg" },
-    { name: "New Arrivals", imageUrl: "/download (1).jpg" },
-    { name: "Winter Collection", imageUrl: "/download (2).jpg" },
-];
+
 
 const HomePage = () => {
-    const { fetchFeaturedProducts, fetchAllProducts, products, isLoading } = useProductStore();
+    const { fetchFeaturedProducts, fetchAllProducts, products, loading } = useProductStore();
+    const [allProducts, setAllProducts] = useState([]);
+    const [featuredProducts, setFeaturedProducts] = useState([]);
     const { category } = useParams();
 
     // Fetch featured products
     useEffect(() => {
-        fetchFeaturedProducts();
-    }, [fetchFeaturedProducts]);
+        const getFeaturedProducts = async () => {
+            try {
+                const response = await fetch("http://localhost:5001/api/products/featured");
+                const data = await response.json();
+                setFeaturedProducts(data.data || []);
+            } catch (error) {
+                console.error("Error fetching featured products:", error);
+            }
+        };
+        getFeaturedProducts();
+    }, []);
 
-    // Fetch all products (if needed for the page)
+    // Fetch all products
     useEffect(() => {
-        fetchAllProducts();
-    }, [fetchAllProducts]);
+        const getAllProducts = async () => {
+            try {
+                const response = await fetch("http://localhost:5001/api/products");
+                const data = await response.json();
+                setAllProducts(data.products || []);
+            } catch (error) {
+                console.error("Error fetching all products:", error);
+            }
+        };
+        getAllProducts();
+    }, []);
 
-    console.log("products:", products);
+    console.log("allProducts:", allProducts);
+    console.log("featuredProducts:", featuredProducts);
 
     return (
         <div className="relative min-h-screen text-white overflow-hidden">
@@ -51,27 +68,25 @@ const HomePage = () => {
                 </div>
 
                 {/* Banner Section */}
-                <div className="container mx-auto px-4 rounded">
-                    <div className="h-56 md:h-72 w-full bg-slate-200 relative overflow-hidden">
-                        {banners.map((banner) => (
-                            <BannerProduct banner={banner} key={banner.name} />
-                        ))}
-                    </div>
-                </div>
+                <BannerProduct />
 
                 {/* Products Section */}
 				<h1 className="text-center text-4xl sm:text-5xl font-bold text-emerald-400 mb-8">All Products</h1>
                 <div className="container mx-auto px-4 rounded">
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
-                        {products.map((product) => (
-                            <ProductCard key={product._id} product={product} />
-                        ))}
+                        {allProducts && allProducts.length > 0 ? (
+                            allProducts.map((product) => (
+                                <ProductCard key={product._id} product={product} />
+                            ))
+                        ) : (
+                            <p className="col-span-full text-center text-xl text-gray-400">Đang tải sản phẩm...</p>
+                        )}
                     </div>
                 </div>
 
                 {/* Featured Products Section */}
-                {!isLoading && products.length > 0 && (
-                    <FeaturedProducts featuredProducts={products} />
+                {featuredProducts && featuredProducts.length > 0 && (
+                    <FeaturedProducts featuredProducts={featuredProducts} />
                 )}
             </div>
         </div>

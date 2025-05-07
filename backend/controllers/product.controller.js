@@ -14,75 +14,90 @@ export const getAllProducts = async (req, res) => {
 
 export const getFeaturedProducts = async (req, res) => {
 	try {
-	  let featuredProducts = await redis.get("featured_products");
-  
-	  if (featuredProducts) {
-		// Log the raw data type fetched from Redis
-		console.log("📌 Raw data from Redis:", typeof featuredProducts);
-  
-		// Ensure the data fetched from Redis is a JSON string before parsing
-		if (typeof featuredProducts === "string") {
-		  try {
-			featuredProducts = JSON.parse(featuredProducts);
-		  } catch (parseError) {
-			console.error("❌ Error parsing featured products from Redis:", parseError.message);
-			return res.status(500).json({ message: "Error parsing data from cache", error: parseError.message });
-		  }
-		}
-  
-		console.log("📌 Parsed data from Redis:", featuredProducts);
-  
-		// Ensure the response JSON is valid
-		return res.json({ success: true, data: featuredProducts });
-	  }
-  
-	  // Fetch from MongoDB
-	  featuredProducts = await Product.find({ isFeatured: true }).lean();
-  
-	  // Check if MongoDB data is invalid
-	  if (!featuredProducts || featuredProducts.length === 0) {
-		return res.status(404).json({ message: "No featured products found" });
-	  }
-  
-	  console.log("📌 Featured Products from MongoDB:", JSON.stringify(featuredProducts, null, 2));
-  
-	  // Save to Redis
-	  await redis.set("featured_products", JSON.stringify(featuredProducts));
-  
-	  res.json({ success: true, data: featuredProducts });
-	} catch (error) {
-	  console.error("❌ Error in getFeaturedProducts controller:", error.message);
-	  res.status(500).json({ message: "Server error", error: error.message });
-	}
-  };
-//   In this updated version, I've added:
+		let featuredProducts = await redis.get("featured_products");
 
-//   A try-catch block when parsing the data fetched from Redis to handle any parsing errors gracefully.
-  
-//   Additional error logging to help identify any issues with the data being parsed or returned.
+		if (featuredProducts) {
+			try {
+				featuredProducts = JSON.parse(featuredProducts);
+				return res.json({ success: true, data: featuredProducts });
+			} catch (parseError) {
+				console.error("Error parsing featured products from Redis:", parseError.message);
+			}
+		}
+
+		// Fetch from MongoDB
+		featuredProducts = await Product.find({ isFeatured: true }).lean();
+
+		if (!featuredProducts || featuredProducts.length === 0) {
+			return res.json({ success: true, data: [] });
+		}
+
+		// Save to Redis
+		await redis.set("featured_products", JSON.stringify(featuredProducts));
+
+		res.json({ success: true, data: featuredProducts });
+	} catch (error) {
+		console.error("Error in getFeaturedProducts controller:", error.message);
+		res.status(500).json({ message: "Server error", error: error.message });
+	}
+};
 
 export const createProduct = async (req, res) => {
 	try {
 		const { name, description, price, image, category } = req.body;
 
+		// Validate required fields
+		if (!name || !description || !price || !image || !category) {
+			return res.status(400).json({ 
+				message: "All fields are required",
+				error: "Missing required fields"
+			});
+		}
+
+		// Validate price is a positive number
+		if (isNaN(price) || price <= 0) {
+			return res.status(400).json({
+				message: "Price must be a positive number",
+				error: "Invalid price"
+			});
+		}
+
 		let cloudinaryResponse = null;
 
-		if (image) {
-			cloudinaryResponse = await cloudinary.uploader.upload(image, { folder: "products" });
+		try {
+			if (image) {
+				cloudinaryResponse = await cloudinary.uploader.upload(image, { 
+					folder: "products",
+					resource_type: "auto"
+				});
+			}
+		} catch (uploadError) {
+			console.error("Error uploading to Cloudinary:", uploadError);
+			return res.status(500).json({ 
+				message: "Error uploading image",
+				error: uploadError.message
+			});
 		}
 
 		const product = await Product.create({
 			name,
 			description,
-			price,
-			image: cloudinaryResponse?.secure_url ? cloudinaryResponse.secure_url : "",
+			price: Number(price),
+			image: cloudinaryResponse?.secure_url || image,
 			category,
+			isFeatured: false
 		});
 
-		res.status(201).json(product);
+		res.status(201).json({
+			success: true,
+			data: product
+		});
 	} catch (error) {
-		console.log("Error in createProduct controller", error.message);
-		res.status(500).json({ message: "Server error", error: error.message });
+		console.error("Error in createProduct controller:", error);
+		res.status(500).json({ 
+			message: "Error creating product",
+			error: error.message
+		});
 	}
 };
 

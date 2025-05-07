@@ -2,7 +2,12 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import axios from "../lib/axios";
 import { Users, Package, ShoppingCart, DollarSign } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { LineChart, Line, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { XAxis, YAxis } from "recharts";
+
+// Sử dụng JavaScript default parameters thay vì defaultProps
+const CustomXAxis = (props) => <XAxis {...props} />;
+const CustomYAxis = (props) => <YAxis {...props} />;
 
 const AnalyticsTab = () => {
 	const [analyticsData, setAnalyticsData] = useState({
@@ -71,9 +76,9 @@ const AnalyticsTab = () => {
 				<ResponsiveContainer width='100%' height={400}>
 					<LineChart data={dailySalesData}>
 						<CartesianGrid strokeDasharray='3 3' />
-						<XAxis dataKey='name' stroke='#D1D5DB' />
-						<YAxis yAxisId='left' stroke='#D1D5DB' />
-						<YAxis yAxisId='right' orientation='right' stroke='#D1D5DB' />
+						<CustomXAxis dataKey='name' stroke='#D1D5DB' />
+						<CustomYAxis yAxisId='left' stroke='#D1D5DB' />
+						<CustomYAxis yAxisId='right' orientation='right' stroke='#D1D5DB' />
 						<Tooltip />
 						<Legend />
 						<Line
